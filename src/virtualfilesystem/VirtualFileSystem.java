@@ -1,4 +1,5 @@
 package virtualfilesystem;
+
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.io.File;
@@ -143,6 +144,101 @@ public class VirtualFileSystem {
         return arr;
     }
 
+    public static void indexedAllocationRead(ArrayList<String> data) {
+
+        for (int i = 0; i < data.size(); i++) {
+            String[] temp = data.get(i).split(" ");
+            if (temp[0].contains(".")) {
+                i++;
+                String[] temp2 = data.get(i).split(" ");
+                int size = temp2.length;
+                int[] arr = new int[size];
+                for (int a = 0; a < size;a++) {
+                    arr[a] = Integer.parseInt(temp2[a]);
+                    stateOfBlocks.set(Integer.parseInt(temp2[a]), 1);
+                }
+                root.insertFile(temp[0], arr);
+            } else {
+                root.insertSubDirectories(temp[0]);
+            }
+        }
+    }
+ 
+    public static void indexedAllocationWrite() {
+        PrintWriter writer;
+        try {
+            writer = new PrintWriter(new File("DiskStructure.txt"));
+            String d = String.valueOf(numberOfBlocks) + "\n";
+            writer.print(indexedGetAllPathsOfSystem("root", d, root));
+            writer.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(VirtualFileSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static String indexedGetAllPathsOfSystem(String p, String paths, Directory d) {
+        ArrayList<FileVS> files = d.getFiles();
+        ArrayList<Directory> subDirectories = d.getSubDirectories();
+        String temp;
+
+        for (int i = 0; i < files.size(); i++) {
+            if (!files.get(i).isDeleted()) {
+                paths += p + "/" + files.get(i).getFileName() + " " + files.get(i).getAllocatedBlocks()[0] + "\n";
+                int [] temp2 = files.get(i).getAllocatedBlocks();
+                String x = "";
+                for(int j = 0; j < temp2.length; j++){
+                   x += " " + String.valueOf(temp2[j]);
+                }
+                paths += x + "\n";
+            }
+        }
+
+        for (int i = 0; i < subDirectories.size(); i++) {
+            if (!subDirectories.get(i).isDeleted()) {
+                temp = p + "/" + subDirectories.get(i).getDirectoryName();
+                paths += temp + "\n";
+                paths = indexedGetAllPathsOfSystem(temp, paths, subDirectories.get(i));
+            }
+        }
+
+        return paths;
+    }
+
+    public static int[] indexedAllocationToBlocks(int size) {
+        int[] arr = new int[size];
+        int temp = 0, start = -1;
+        TreeMap<Integer, Integer> max = new TreeMap<>();
+
+        max.put(0, -1);
+
+        for (int i = 0; i < numberOfBlocks; i++) {
+            if (stateOfBlocks.get(i) == 0) {
+                temp++;
+                if (start == -1) {
+                    start = i;
+                }
+            } else if (i != 0 && stateOfBlocks.get(i - 1) == 0 && !max.containsKey(temp)) {
+                max.put(temp, start);
+                temp = 0;
+                start = -1;
+            }
+        }
+
+        if (stateOfBlocks.get(numberOfBlocks - 1) == 0 && !max.containsKey(temp)) {
+            max.put(temp, start);
+        }
+
+        if (max.lastEntry().getKey() < size) {
+            return null;
+        }
+
+        for (int i = max.lastEntry().getValue(), j = 0; j < size; i++, j++) {
+            arr[j] = i;
+        }
+
+        return arr;
+    }
+
     public static void deallocateOrAllocateOfBlocks(int[] data, int state) {
         for (int i = 0; i < data.length; i++) {
             stateOfBlocks.set(data[i], state);
@@ -168,20 +264,20 @@ public class VirtualFileSystem {
         }
     }
 
-    public static void DisplayDiskStatus(){
+    public static void DisplayDiskStatus() {
         int size = numberOfBlocks;
-        for(int i = 0; i < numberOfBlocks; i++){
-            if(stateOfBlocks.get(i) == 1){
+        for (int i = 0; i < numberOfBlocks; i++) {
+            if (stateOfBlocks.get(i) == 1) {
                 size--;
                 System.out.println("Block number " + i + " Allocated");
-            }else {
+            } else {
                 System.out.println("Block number " + i + " Free");
             }
         }
         System.out.println("Free space:" + size);
         System.out.println("Allocated space: " + (numberOfBlocks - size));
     }
-            
+
     public static void comands() {
 
         String comand;
@@ -231,7 +327,7 @@ public class VirtualFileSystem {
                 }
 
             } else if (arr[0].equalsIgnoreCase("DisplayDiskStatus") && arr.length == 1) {
-                   DisplayDiskStatus(); 
+                DisplayDiskStatus();
             } else if (arr[0].equalsIgnoreCase("DisplayDiskStructure") && arr.length == 1) {
 
                 root.printDirectoryStructure("");
@@ -245,4 +341,5 @@ public class VirtualFileSystem {
 
         }
     }
+
 }

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 public class Directory {
 
-    private String directoryPath;
     private String directoryName;
     private ArrayList<FileVS> files = new ArrayList<>();
     private ArrayList<Directory> subDirectories = new ArrayList<>();
@@ -24,14 +23,6 @@ public class Directory {
 
     public void setSubDirectories(ArrayList<Directory> subDirectories) {
         this.subDirectories = subDirectories;
-    }
-
-    public String getDirectoryPath() {
-        return directoryPath;
-    }
-
-    public void setDirectoryPath(String directoryPath) {
-        this.directoryPath = directoryPath;
     }
 
     public boolean isDeleted() {
@@ -101,14 +92,19 @@ public class Directory {
     }
 
     public Directory checkPathOfDirectory(String dirName) {
-        String[] data = dirName.split("/", 2);// data[0],data[1]
+        String[] data = dirName.split("/", 2);
         Directory d = null;
-        if (data[0].equalsIgnoreCase(directoryName)) {
-            d = this;
-            for (int i = 0; i < subDirectories.size() && data.length == 2; i++) {
-                d = subDirectories.get(i).checkPathOfDirectory(data[1]);
-                if (d != null) {
-                    break;
+        if (data[0].equalsIgnoreCase(directoryName) && !isDeleted()) {
+            if (data.length == 1) {
+                return this;
+            }
+
+            for (int i = 0; i < subDirectories.size(); i++) {
+                if (!subDirectories.get(i).isDeleted()) {
+                    d = subDirectories.get(i).checkPathOfDirectory(data[1]);
+                    if (d != null) {
+                        break;
+                    }
                 }
             }
         }
@@ -118,37 +114,48 @@ public class Directory {
     public FileVS checkPathOfFile(String dirName) {
         String[] data = dirName.split("/", 2);
         FileVS f = null;
-        if (data[0].equalsIgnoreCase(directoryName)) {
+        if (data[0].equalsIgnoreCase(directoryName) && !isDeleted()) {
 
             for (int i = 0; i < files.size(); i++) {
-                if (files.get(i).getFileName().equalsIgnoreCase(data[1])) {
-                    f = files.get(i);
-                    break;
+                if (files.get(i).getFileName().equalsIgnoreCase(data[1]) && !files.get(i).isDeleted()) {
+                    return files.get(i);
+
                 }
             }
 
             for (int i = 0; i < subDirectories.size(); i++) {
-                f = subDirectories.get(i).checkPathOfFile(data[1]);
-                if (f != null) {
-                    break;
+                if (!subDirectories.get(i).isDeleted()) {
+                    f = subDirectories.get(i).checkPathOfFile(data[1]);
+                    if (f != null) {
+                        break;
+                    }
                 }
             }
         }
         return f;
     }
 
-    public void printDirectoryStructure(String space) {
+    public void printDirectoryStructure(String space, Boolean state) {
         if (!deleted) {
             System.out.println(space + directoryName);
             space += "  ";
             for (int i = 0; i < files.size(); i++) {
                 if (!files.get(i).isDeleted()) {
-                    System.out.println(space + files.get(i).getFileName());
+                    if (state) {
+                        System.out.print(space + files.get(i).getFileName());
+                        for (int j = 0; j < files.get(i).getAllocatedBlocks().length; j++) {
+                            System.out.print(" " + files.get(i).getAllocatedBlocks()[j]);
+                        }
+                        System.out.println();
+                    } else {
+                        System.out.println(space + files.get(i).getFileName());
+                    }
+
                 }
             }
             for (int i = 0; i < subDirectories.size(); i++) {
                 if (!subDirectories.get(i).isDeleted()) {
-                    subDirectories.get(i).printDirectoryStructure(space);
+                    subDirectories.get(i).printDirectoryStructure(space, state);
                 }
             }
         }

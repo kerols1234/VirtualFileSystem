@@ -1,7 +1,0 @@
-10
-root/file.txt 5 2
-root/folder1
-root/folder1/fil.txt 7 2
-root/folder1/f
-root/folder1/f/file.txt 0 2
-root/folder1/f/fil.txt 2 1

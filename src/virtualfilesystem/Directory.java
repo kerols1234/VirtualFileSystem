@@ -92,6 +92,9 @@ public class Directory {
     }
 
     public Directory checkPathOfDirectory(String dirName) {
+        if (dirName.contains(".")) {
+            return null;
+        }
         String[] data = dirName.split("/", 2);
         Directory d = null;
         if (data[0].equalsIgnoreCase(directoryName) && !isDeleted()) {

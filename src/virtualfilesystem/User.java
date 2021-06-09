@@ -15,8 +15,8 @@ public class User {
 
     String name;
     String password;
-    ArrayList<String> path;
-    ArrayList<Integer> Capabilities;
+    ArrayList<String> path = new ArrayList<>();
+    ArrayList<Integer> Capabilities = new ArrayList<>();
 
     public User(String name, String password) {
         this.name = name;

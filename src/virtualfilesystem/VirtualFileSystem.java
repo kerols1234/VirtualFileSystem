@@ -46,13 +46,13 @@ public class VirtualFileSystem {
                     System.out.println("3-Indexed Allocation method");
                     m = scanner.nextLine();
 
-                    if (m.equalsIgnoreCase("Contiguous Allocation")) {
+                    if (m.equalsIgnoreCase("1")) {
                         m = "c";
                         break;
-                    } else if (m.equalsIgnoreCase("Linked Allocation")) {
+                    } else if (m.equalsIgnoreCase("2")) {
                         m = "l";
                         break;
-                    } else if (m.equalsIgnoreCase("Indexed Allocation")) {
+                    } else if (m.equalsIgnoreCase("3")) {
                         m = "i";
                         break;
                     }
@@ -132,7 +132,7 @@ public class VirtualFileSystem {
             d = myReader.nextLine();
             String[] t = d.split(",");
             int y = 2;
-            for (int j = 1; j < users.size(); j++) {
+            for (int j = 0; j < users.size(); j++) {
                 users.get(j).getPath().add(t[0]);
                 users.get(j).getCapabilities().add(Integer.parseInt(t[y]));
                 y += 2;
@@ -145,8 +145,12 @@ public class VirtualFileSystem {
         String d = "";
         for (int i = 0; i < users.get(0).getPath().size(); i++) {
             d += users.get(0).getPath().get(i);
-            for (int j = 1; j < users.size() - 1; j++) {
-                d += "," + users.get(j).getName() + "," + (users.get(j).getCapabilities().get(i)).toString();
+            for (int j = 0; j < users.size(); j++) {
+                String x = (users.get(j).getCapabilities().get(i)).toString();
+                if (x.length() == 1) {
+                    x = "0" + x;
+                }
+                d += "," + users.get(j).getName() + "," + x;
             }
             d += "\n";
         }
@@ -195,7 +199,7 @@ public class VirtualFileSystem {
     }
 
     public static User checkUser(String name) {
-        for (int i = 1; i < users.size(); i++) {
+        for (int i = 0; i < users.size(); i++) {
             if (users.get(i).getName().equalsIgnoreCase(name)) {
                 return users.get(i);
             }
@@ -203,42 +207,51 @@ public class VirtualFileSystem {
         return null;
     }
 
-    public static void getAllPathsOfDirectories(String p, User u, Directory d) {
-        ArrayList<Directory> subDirectories = d.getSubDirectories();
-        String temp;
-
-        u.getPath().add(p);
-        u.getCapabilities().add(00);
-
-        for (int i = 0; i < subDirectories.size(); i++) {
-            if (!subDirectories.get(i).isDeleted()) {
-                temp = p + "/" + subDirectories.get(i).getDirectoryName();
-                getAllPathsOfDirectories(temp, u, subDirectories.get(i));
-            }
+    public static void getAllPathsOfDirectories(String w, User u, Directory d) { 
+        ArrayList<String> p = user.getPath();
+        for(int i = 0; i <p.size(); i++){
+            u.getPath().add(p.get(i));
+            u.getCapabilities().add(0);
         }
     }
 
-    public static Boolean checkAccess(String path) {
+    public static Boolean checkAccess(String path, int c) {
 
         String[] temp = path.split("/");
         String t = "root";
 
+        int b = 10;
+        if(c == 1){
+            b = 1;
+        }
+        
+        if (user.getName().equalsIgnoreCase("admin")) {
+            return true;
+        }
+
+        ArrayList<String> p = user.getPath();
         for (int i = 1; i < temp.length; i++) {
 
             if (temp[i].contains(".")) {
                 continue;
             }
 
-            ArrayList<String> p = user.getPath();
             for (int j = 0; j < p.size(); j++) {
                 int x = user.getCapabilities().get(j);
-                if (p.get(j).equalsIgnoreCase(t) && (x == 10 || x == 11)) {
+                if (p.get(j).equalsIgnoreCase(t) && (x == b || x == 11)) {
                     return true;
                 }
             }
 
             t += "/" + temp[i];
 
+        }
+
+        for (int j = 0; j < p.size(); j++) {
+            int x = user.getCapabilities().get(j);
+            if (p.get(j).equalsIgnoreCase(t) && (x == 10 || x == 11)) {
+                return true;
+            }
         }
 
         return false;
@@ -252,9 +265,9 @@ public class VirtualFileSystem {
 
             if (p.get(i).contains(path)) {
 
-                for (int j = 1; j < users.size(); j++) {
-                    users.get(j).getPath().remove(j);
-                    users.get(j).getCapabilities().remove(j);
+                for (int j = 0; j < users.size(); j++) {
+                    users.get(j).getPath().remove(i);
+                    users.get(j).getCapabilities().remove(i);
                 }
 
             }
@@ -277,7 +290,7 @@ public class VirtualFileSystem {
                 int size = Integer.parseInt(arr[2]);
                 int[] alloc = method.allocateBlocks(size, numberOfBlocks, stateOfBlocks);
 
-                if (!checkAccess(arr[1])) {
+                if (!checkAccess(arr[1],0)) {
                     System.out.println("you do not have access to create file in this folder");
                     continue;
                 }
@@ -291,7 +304,7 @@ public class VirtualFileSystem {
 
             } else if (arr[0].equalsIgnoreCase("CreateFolder") && arr.length == 2) {
 
-                if (!checkAccess(arr[1])) {
+                if (!checkAccess(arr[1],0)) {
                     System.out.println("you do not have access to create file in this folder");
                     continue;
                 }
@@ -301,14 +314,16 @@ public class VirtualFileSystem {
                     continue;
                 }
 
-                for (int i = 0; i < users.size(); i++) {
+                users.get(0).getPath().add(arr[1]);
+                users.get(0).getCapabilities().add(11);
+                for (int i = 1; i < users.size(); i++) {
                     users.get(i).getPath().add(arr[1]);
                     users.get(i).getCapabilities().add(00);
                 }
 
             } else if (arr[0].equalsIgnoreCase("DeleteFile") && arr.length == 2) {
 
-                if (!checkAccess(arr[1])) {
+                if (!checkAccess(arr[1],1)) {
                     System.out.println("you do not have access to create file in this folder");
                     continue;
                 }
@@ -323,7 +338,7 @@ public class VirtualFileSystem {
 
             } else if (arr[0].equalsIgnoreCase("DeleteFolder") && arr.length == 2) {
 
-                if (!checkAccess(arr[1])) {
+                if (!checkAccess(arr[1],1)) {
                     System.out.println("you do not have access to create file in this folder");
                     continue;
                 }
@@ -354,7 +369,6 @@ public class VirtualFileSystem {
                     System.out.println("error");
                 }
 
-                break;
             } else if (arr[0].equalsIgnoreCase("Grant") && arr.length == 4) {
 
                 if (!user.getName().equalsIgnoreCase("admin")) {
@@ -378,7 +392,6 @@ public class VirtualFileSystem {
                     }
 
                 }
-                break;
 
             } else if (arr[0].equalsIgnoreCase("CUser") && arr.length == 3) {
                 if (!user.getName().equalsIgnoreCase("admin")) {
@@ -397,10 +410,8 @@ public class VirtualFileSystem {
                     }
 
                 }
-                break;
             } else if (arr[0].equalsIgnoreCase("TellUser") && arr.length == 1) {
                 System.out.println(user.getName());
-                break;
             } else {
                 System.out.println("error");
             }
